@@ -8,4 +8,4 @@ void vertices_ady(Lista G);
 void vertice_a_adyacente_b(Lista G);
 Dato capturaIdVertice();
 void imprimeListaGrafo(Lista A);
-void dijkstra (Lista *A);
+void dijkstra (Lista *A, int a, int b);

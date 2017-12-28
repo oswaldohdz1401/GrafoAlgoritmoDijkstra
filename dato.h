@@ -6,6 +6,8 @@ typedef void* Dato;
 struct arista{
 	int destino;
 	int peso;
+	/*-----*/
+	int visitado;
 };
 struct vertice{
 	int id;

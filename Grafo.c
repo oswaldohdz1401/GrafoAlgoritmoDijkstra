@@ -5,8 +5,8 @@ main(){
     Lista Grafo;
     inicializa(&Grafo);
 	crea_grafo(&Grafo);
-	dijkstra(&Grafo);
-	//imprimeListaGrafo(Grafo);
+	//dijkstra(&Grafo);
+	imprimeListaGrafo(Grafo);
 	
 }
 void crea_grafo(Lista *G){
@@ -60,20 +60,19 @@ void setArista(Arista * A,int n){
     creaDatoArista(destino,peso,A);
 }
 /*----------------------------------------------------------------------------*/
-
 void iniDatoVertice(Vertice *consulta){
 	consulta -> distancia = MAX;
 	consulta -> visitado = 0;
 	consulta -> previo = -1;
 }
 void iniVertices(Lista *A){
-	Dato *iniciar;
+	Dato *ni;
 	Nodo * aux;
 	aux= A->inicio;
 	if(esVacia(*A)!=1){
 		while(aux!=NULL){
-			iniciar=(aux->contenido);
-			iniDatoVertice(iniciar);
+			ni=(aux->contenido);
+			iniDatoVertice(ni);
 			aux= aux->sig;
 		}
 	}else{
@@ -100,6 +99,13 @@ Dato regresaNodoMejorPeso(Lista A){
 	}
 	return (Dato)mejor;
 }
+Dato regresarElFinal(Lista A){
+	Dato final;
+	Nodo *aux;
+	aux = A.fin;
+	final = aux->contenido;
+	return (Dato)final;
+}
 Dato regresaElInicio(Lista *A){
 	Dato inicio;
 	Nodo *aux;
@@ -109,27 +115,16 @@ Dato regresaElInicio(Lista *A){
 	consulta -> distancia = 0;
 	return (Dato)inicio;
 }
-Vertice* obtenenVerticeYBuscalo(Lista A, Lista ady){
-	Nodo *master = A.inicio;
-	Dato *datoMaster;
-	Nodo *nodoAdy = ady.inicio;
-	Dato *datoAdy;
-	
-	while(master != NULL && nodoAdy != NULL){
-		datoMaster = master->contenido; //Vertice 
-		datoAdy    = nodoAdy->contenido;//Aristas Ady
-		Vertice* v_comparar = &(*(Vertice*)(datoMaster));//Convertimos a datoMaster a algo de tipo Vertice
-		Arista*  a_comparar = &(*(Arista*)(datoAdy));
-		if(v_comparar->id == a_comparar->destino){
-			if(v_comparar -> visitado == 0){
-				v_comparar -> visitado = 1;
-			}
-			v_comparar->distancia = a_comparar -> destino;
-			return v_comparar;
-		} 
-		master = master->sig;
-		nodoAdy = nodoAdy->sig;
-	} 
+Dato obtenenVerticeYBuscalo(Lista A, int d){
+	Nodo *aux = A.inicio;
+	Vertice a;
+	while(aux != NULL){
+		a = (*(Vertice *)(aux->contenido));
+		if (a.id == d){
+			return (Dato)aux->contenido;
+		}
+		aux = aux->sig;
+	}
 }
 /*
 void relacion(Lista *caminoCorto, Vertice encontrado , Vertice mejor){
@@ -137,32 +132,75 @@ void relacion(Lista *caminoCorto, Vertice encontrado , Vertice mejor){
 		
 	}
 }*/
-void dijkstra (Lista *A){
-	int i;
-	int tam;
-	iniVertices(A);
-	Lista caminoCorto;
-	inicializa(&caminoCorto);
-	insertaInicio(&caminoCorto,regresaElInicio(A));
-	Nodo *aux = A->inicio;
-	while(esVacia(caminoCorto) != 1 && aux!= NULL){
-		Vertice *mejor = &(*(Vertice *)((Dato)regresaNodoMejorPeso(caminoCorto)));
-		if(mejor->visitado == 0){
-			mejor->visitado = 1;
-			//obtenemos el tama�o de la lista de notos ayacentes
-			Lista ady; inicializa(&ady); 
-			ady = * ((Lista*)mejor->listaAristas);
-			//Vamos a recorrer sus adyacentes del mejor
-			for(i = 0; i< ady.tam; i++){
-				//obtenemos el ID del vertice adyacente
-				Vertice* verticeEncontrado = obtenenVerticeYBuscalo(*A,ady);
-				//relacion(&caminoCorto,verticeEncontrado,mejor);
-			}
+int verificaEnGrafo(Lista A,int a, int b){
+	int primero = 0;
+	int segundo = 0;
+	Nodo *aux = A.inicio;
+	Dato dComparar;
+	Vertice *vComparar;
+	while(aux != NULL){
+		dComparar = aux->contenido;
+		vComparar = &(*(Vertice *)(dComparar)); 
+		if(vComparar->id == a){primero = 1;}
+		if(vComparar->id == b){segundo = 1;}
+		if(primero && segundo){
+			return 1;
 		}
-		
 		aux = aux->sig;
 	}
-	imprimeListaGrafo(caminoCorto);
+	return 0; 
+}
+int obtenDistanciaDeAdyacente(Lista A,int d){
+	Nodo *aux = A.inicio;
+	Vertice a;
+	while(aux != NULL){
+		a = (*(Vertice *)(aux->contenido));
+		if (a.id == d){
+			return a.distancia;
+		}
+		aux = aux->sig;
+	}
+}
+void dijkstra (Lista *A,int a, int b){
+	Vertice *mejor = (Vertice *)malloc(sizeof(Vertice));
+	int i;
+	int tam;
+	int w = 0;
+	Lista caminoCorto;	inicializa(&caminoCorto);
+	Vertice *ultimo = (Vertice *)malloc(sizeof(Vertice));
+	Lista *ady;
+	if(verificaEnGrafo(*A,a,b)){
+		printf("HOLA");
+		iniVertices(A);
+		insertaInicio(&caminoCorto,regresaElInicio(A));
+			ultimo = &(*(Vertice *)((Dato)regresarElFinal(caminoCorto)));
+			if(ultimo->visitado == 0){
+				ultimo->visitado = 1;
+				//obtenemos el tama�o de la lista de notos ayacentes
+				inicializa(&ady); 
+				ady = &(*((Lista*)ultimo->listaAristas));
+				//Vamos a recorrer sus adyacentes del ultimo
+				//Tenos que recorrer cada uno de los vertices adyacentes de la arista
+				//Encontrando el mejor camino
+				Nodo *AUX = ady->inicio;
+				Arista *a = (Arista*)malloc(sizeof(Arista));
+				while(AUX != NULL && ultimo->id != b){
+					a = &(*((Arista*)(AUX->contenido)));
+					if(a->visitado == 0 && ultimo->distancia + a->peso < obtenDistanciaDeAdyacente(*A,(int)a->destino)){
+						mejor -> id = ultimo->id;
+						mejor->distancia = ultimo->distancia + a->peso ;
+						if(mejor -> distancia > ultimo->distancia + a->peso){
+							mejor -> distancia = ultimo->distancia + a->peso;
+							mejor -> visitado = 1;
+						}
+					}
+					a->visitado = 1;
+					AUX = AUX->sig;
+				}
+				insertaFinal(&caminoCorto,(Dato)obtenenVerticeYBuscalo(*A,mejor->id));
+			}
+	}
+	imprimeListaGrafo(caminoCorto);	
 }
 /*-----------------------------------------*/
 void imprimeArista(Arista A){
